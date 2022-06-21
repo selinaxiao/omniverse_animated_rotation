@@ -1,3 +1,4 @@
+from omni.anim import curve_editor
 import omni.ext
 import omni.ui as ui
 import omni.kit.commands
@@ -14,13 +15,18 @@ import omni.kit.widget.timeline.scripts.ui_helpers
 class MyExtension(omni.ext.IExt):
     # ext_id is current extension id. It can be used with extension manager to query additional information, like where
     # this extension is located on filesystem.
+
+    prev_interval = 0
+    prev_num_of_intervals = 0
+    prev_prims = []
+    prev_prim_path = []
+    prev_rotation = []
+
+
     def on_startup(self, ext_id):
         print("[my.animated.rotation] MyExtension startup")
         self._ext_id = ext_id
-        self.prev_interval = 0
-        self.prev_num_of_intervals = 0
-        self.prev_prims = []
-        self.prev_prim_path = []
+        
 
         self._window = ui.Window("Animated Rotation", width=300, height=300)
         with self._window.frame:
@@ -45,6 +51,7 @@ class MyExtension(omni.ext.IExt):
 
     def on_click(self):
         self.clean_up()
+
     
         time_interval = self.field1.model.get_value_as_int()
         number_of_interval = self.field2.model.get_value_as_int()
@@ -54,35 +61,51 @@ class MyExtension(omni.ext.IExt):
         self.prev_interval = time_interval
         self.prev_num_of_intervals = number_of_interval
         prims = self.get_prims()
+        print(self.prev_prims)
+
+        if self.prev_prims:
+            for i in prims:
+                if i not in self.prev_prims:
+                    self.clean_up()
+            for i in self.prev_prims:
+                if i not in prims:
+                    self.clean_up()
 
         if prims:
-            # print(h_angle, v_angle)
+            
+
             for i in range(len(prims)):
+                # print(prims[i])
                 current_prim = prims[i].GetAttribute('xformOp:rotateXYZ').Get()
+                # print(current_prim)
                 omni.kit.commands.execute('ChangeProperty',
                     prop_path=Sdf.Path(str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ'),
                     value=Gf.Vec3d(0.0,0.0,0.0),
                     prev=current_prim)
+                # print(prims[i].GetAttribute('xformOp:rotateXYZ').Get())
 
-            omni.kit.commands.execute('SetAnimCurveKey', time=Usd.TimeCode(0),
-                paths=[str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|x', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|y', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|z'])
-        
 
-            for j in range(number_of_interval+1):
-                time = (j+1)* time_interval
-                omni.kit.commands.execute('ChangeProperty',
-                    prop_path=Sdf.Path(str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ'),
-                    value=Gf.Vec3d((current_prim[0]+h_angle*(j+1)), current_prim[1], (current_prim[2]+v_angle*(j+1))),
-                    prev=current_prim)
+                omni.kit.commands.execute('SetAnimCurveKey', time=Usd.TimeCode(0),
+                    paths=[str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|x', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|y', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|z'])
+            
 
-                omni.kit.commands.execute('SetAnimCurveKey', time=Usd.TimeCode(time),
-                paths=[str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|x', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|y', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|z'])
+                for j in range(number_of_interval):
+                    # print("loop start")
+                    time = (j+1)* time_interval
+                    omni.kit.commands.execute('ChangeProperty',
+                        prop_path=Sdf.Path(str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ'),
+                        value=Gf.Vec3d((0+h_angle*(j+1)), 0, (0+v_angle*(j+1))),
+                        prev=current_prim)
+
+                    omni.kit.commands.execute('SetAnimCurveKey', time=Usd.TimeCode(time),
+                    paths=[str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|x', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|y', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|z'])
         
         self.prev_prims = prims
 
 
     def on_shutdown(self):
         print("[my.animated.rotation] MyExtension shutdown")
+        
 
 
 
@@ -155,9 +178,12 @@ class MyExtension(omni.ext.IExt):
                     paths=[self.prev_rotation[1]],
                     time=Usd.TimeCode(delete_times[keys]))
 
+    #get all existing prims on the stage
     def get_prims(self):
         context = omni.usd.get_context()
         stage = context.get_stage()
         prims = [stage.GetPrimAtPath(m) for m in context.get_selection().get_selected_prim_paths()]
         return prims
+
+
 
