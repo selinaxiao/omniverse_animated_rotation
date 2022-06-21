@@ -51,13 +51,12 @@ class MyExtension(omni.ext.IExt):
         h_angle = self.field3.model.get_value_as_float()
         v_angle = self.field4.model.get_value_as_float()
 
-        # print("hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
-        
         self.prev_interval = time_interval
         self.prev_num_of_intervals = number_of_interval
         prims = self.get_prims()
+
         if prims:
-            print(h_angle, v_angle)
+            # print(h_angle, v_angle)
             for i in range(len(prims)):
                 current_prim = prims[i].GetAttribute('xformOp:rotateXYZ').Get()
                 omni.kit.commands.execute('ChangeProperty',
@@ -78,6 +77,7 @@ class MyExtension(omni.ext.IExt):
 
                 omni.kit.commands.execute('SetAnimCurveKey', time=Usd.TimeCode(time),
                 paths=[str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|x', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|y', str(prims[i].GetPrimPath())+'.xformOp:rotateXYZ|z'])
+        
         self.prev_prims = prims
 
 
@@ -101,12 +101,12 @@ class MyExtension(omni.ext.IExt):
             self.prev_rotation.append((str(self.prev_prims[i].GetPrimPath())+'.xformOp:rotateXYZ:y'))
             self.prev_rotation.append((str(self.prev_prims[i].GetPrimPath())+'.xformOp:rotateXYZ:z'))
         # print([t for t in range(0, self.prev_interval*self.prev_num_of_intervals, self.prev_num_of_intervals)])
-        print("-------------------------------")
-        print([a for a in self.prev_path_rotation for n in range(self.prev_num_of_intervals)])
-        print("-------------------------------")
-        print([b for b in self.prev_prim_path for m in range(self.prev_num_of_intervals*2)])
-        print("-------------------------------")
-        print(SingletonCurveEditor.get_instance_ref())
+        # print("-------------------------------")
+        # print([a for a in self.prev_path_rotation for n in range(self.prev_num_of_intervals)])
+        # print("-------------------------------")
+        # print([b for b in self.prev_prim_path for m in range(self.prev_num_of_intervals*2)])
+        # print("-------------------------------")
+        # print(SingletonCurveEditor.get_instance_ref())
 
         
         context = omni.usd.get_context()
@@ -117,10 +117,10 @@ class MyExtension(omni.ext.IExt):
             delete_track_names=[a for a in self.prev_path_rotation for n in range(self.prev_num_of_intervals)]
             delete_track_users=[b for b in self.prev_prim_path for m in range(self.prev_num_of_intervals*2)]
             
-            print("-------------------------------")
-            print(delete_times)
-            print("-------------------------------")
-            print(delete_track_users)
+            # print("-------------------------------")
+            # print(delete_times)
+            # print("-------------------------------")
+            # print(delete_track_users)
 
             omni.kit.commands.execute('ChangeSelectionCurveCommand',
             new_times=[],
@@ -134,10 +134,10 @@ class MyExtension(omni.ext.IExt):
 
             root_layer = stage.GetRootLayer()
             session_layer = stage.GetSessionLayer()
-            print(root_layer)
+            # print(root_layer)
 
             for keys in range(len(delete_times)):
-                print(delete_times[keys])
+                # print(delete_times[keys])
                 
                 omni.kit.commands.execute('RemoveAnimCurveKey',
                     stage=Usd.Stage.Open(rootLayer=root_layer, sessionLayer=session_layer),
